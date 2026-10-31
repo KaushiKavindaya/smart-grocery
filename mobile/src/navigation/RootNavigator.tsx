@@ -11,9 +11,17 @@ import { LoginScreen } from "../screens/auth/LoginScreen";
 import { RegisterScreen } from "../screens/auth/RegisterScreen";
 import { ForgotPasswordScreen } from "../screens/auth/ForgotPasswordScreen";
 
+import { HomeScreen } from "../screens/main/HomeScreen";
+import { InsightsScreen } from "../screens/main/InsightsScreen";
+
+import { ShoppingListsScreen } from "../screens/main/ShoppingListsScreen";
+import { ShoppingListDetailScreen } from "../screens/main/ShoppingListDetailScreen";
+import { AddShoppingItemScreen } from "../screens/main/AddShoppingItemScreen";
+import { EditShoppingItemScreen } from "../screens/main/EditShoppingItemScreen";
+import { ReviewPurchaseScreen } from "../screens/main/ReviewPurchaseScreen";
+import { CreateCustomListScreen } from "../screens/main/CreateCustomListScreen";
+
 import {
-  HomeScreen,
-  ShoppingScreen,
   PantryScreen,
   RecipesScreen,
   MoreScreen,
@@ -51,7 +59,7 @@ const TabNavigator = () => {
       />
       <Tab.Screen
         name="Shopping"
-        component={ShoppingScreen}
+        component={ShoppingListsScreen}
         options={{
           tabBarIcon: () => <Text style={{ fontSize: 18 }}>🛒</Text>,
         }}
@@ -91,6 +99,26 @@ export const RootNavigator = () => {
         <Stack.Screen name="Register" component={RegisterScreen} />
         <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
         <Stack.Screen name="MainTabs" component={TabNavigator} />
+        <Stack.Screen name="Insights" component={InsightsScreen} />
+
+        {/* Shopping Stack */}
+        <Stack.Screen
+          name="ShoppingListDetail"
+          component={ShoppingListDetailScreen}
+        />
+        <Stack.Screen
+          name="AddShoppingItem"
+          component={AddShoppingItemScreen}
+        />
+        <Stack.Screen
+          name="EditShoppingItem"
+          component={EditShoppingItemScreen}
+        />
+        <Stack.Screen name="ReviewPurchase" component={ReviewPurchaseScreen} />
+        <Stack.Screen
+          name="CreateCustomList"
+          component={CreateCustomListScreen}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );

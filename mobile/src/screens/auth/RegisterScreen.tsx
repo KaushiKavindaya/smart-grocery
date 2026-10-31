@@ -52,8 +52,15 @@ export const RegisterScreen = ({ navigation }: any) => {
       await authApi.register({ fullName, email, password });
       navigation.replace("MainTabs");
     } catch (err: any) {
-      const msg = err?.response?.data?.message || "Registration failed";
-      setGeneralError(msg);
+      if (err.response?.data?.message) {
+        setGeneralError(err.response.data.message);
+      } else if (err.message && err.message.includes("Network Error")) {
+        setGeneralError(
+          "Cannot connect to backend server. Make sure phone and PC are on the same Wi-Fi and the IP in client.ts is correct."
+        );
+      } else {
+        setGeneralError(err.message || "Registration failed");
+      }
     } finally {
       setLoading(false);
     }

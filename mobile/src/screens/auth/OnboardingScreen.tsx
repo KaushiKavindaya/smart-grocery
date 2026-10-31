@@ -1,10 +1,22 @@
-import React, { useState } from "react";
-import { View, Text, StyleSheet, Image } from "react-native";
+import React, { useState, useRef } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  FlatList,
+  Dimensions,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
+} from "react-native";
 import { Colors, Spacing, Typography } from "../../theme/theme";
 import { AppButton } from "../../components/AppButton";
 
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
+
 const SLIDES = [
   {
+    id: "1",
     step: "01 / A LITTLE MORE ORGANIZED",
     title: "Organize Your\nGroceries",
     desc: "Daily top-ups, weekly essentials, monthly staples. Keep every list and category in one calm place.",
@@ -13,6 +25,7 @@ const SLIDES = [
     headerSub: "A fresher everyday starts here",
   },
   {
+    id: "2",
     step: "02 / KEEP FRESHNESS IN FOCUS",
     title: "Never Miss an Expiry\nDate",
     desc: "Scan the packaging, review the date and get a helpful reminder before good food goes to waste.",
@@ -21,6 +34,7 @@ const SLIDES = [
     headerSub: "Less guessing. More peace of mind.",
   },
   {
+    id: "3",
     step: "03 / FROM PANTRY TO PLATE",
     title: "Discover Meals with\nWhat You Have",
     desc: "Turn fresh pantry ingredients into something delicious. Use what’s on hand, and shop only for what’s missing.",
@@ -31,43 +45,84 @@ const SLIDES = [
 ];
 
 export const OnboardingScreen = ({ navigation }: any) => {
-  const [index, setIndex] = useState(0);
-  const slide = SLIDES[index];
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const flatListRef = useRef<FlatList>(null);
 
-  const handleNext = () => {
-    if (index < SLIDES.length - 1) {
-      setIndex(index + 1);
+  const onScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const slideIndex = Math.round(
+      event.nativeEvent.contentOffset.x / SCREEN_WIDTH
+    );
+    if (
+      slideIndex !== currentIndex &&
+      slideIndex >= 0 &&
+      slideIndex < SLIDES.length
+    ) {
+      setCurrentIndex(slideIndex);
+    }
+  };
+
+  const handleGetStarted = () => {
+    if (currentIndex < SLIDES.length - 1) {
+      flatListRef.current?.scrollToIndex({
+        index: currentIndex + 1,
+        animated: true,
+      });
+      setCurrentIndex(currentIndex + 1);
     } else {
       navigation.navigate("Register");
     }
   };
 
-  return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.brandTitle}>Smart Grocery</Text>
-        <Text style={styles.brandSub}>{slide.headerSub}</Text>
-      </View>
-
-      <View style={styles.imageCard}>
-        <Image source={{ uri: slide.image }} style={styles.image} />
-      </View>
-
-      <View style={styles.content}>
-        <View style={styles.stepBadge}>
-          <Text style={styles.stepText}>{slide.step}</Text>
+  const renderSlide = ({ item }: { item: (typeof SLIDES)[0] }) => {
+    return (
+      <View style={styles.slideContainer}>
+        <View style={styles.header}>
+          <Text style={styles.brandTitle}>Smart Grocery</Text>
+          <Text style={styles.brandSub}>{item.headerSub}</Text>
         </View>
 
-        <Text style={styles.title}>{slide.title}</Text>
-        <Text style={styles.desc}>{slide.desc}</Text>
+        <View style={styles.imageCard}>
+          <Image
+            source={{ uri: item.image }}
+            style={styles.image}
+            resizeMode="cover"
+          />
+        </View>
 
+        <View style={styles.content}>
+          <View style={styles.stepBadge}>
+            <Text style={styles.stepText}>{item.step}</Text>
+          </View>
+          <Text style={styles.title}>{item.title}</Text>
+          <Text style={styles.desc}>{item.desc}</Text>
+        </View>
+      </View>
+    );
+  };
+
+  return (
+    <View style={styles.mainContainer}>
+      <FlatList
+        ref={flatListRef}
+        data={SLIDES}
+        renderItem={renderSlide}
+        keyExtractor={(item) => item.id}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        onMomentumScrollEnd={onScroll}
+        bounces={false}
+      />
+
+      <View style={styles.footer}>
+        {/* Dynamic Indicator dots */}
         <View style={styles.dotsRow}>
           {SLIDES.map((_, i) => (
             <View
               key={i}
               style={[
                 styles.dot,
-                i === index ? styles.activeDot : styles.inactiveDot,
+                i === currentIndex ? styles.activeDot : styles.inactiveDot,
               ]}
             />
           ))}
@@ -77,7 +132,7 @@ export const OnboardingScreen = ({ navigation }: any) => {
           <AppButton
             title="Get Started"
             variant="primary"
-            onPress={handleNext}
+            onPress={handleGetStarted}
             style={styles.mb}
           />
           <AppButton
@@ -92,16 +147,18 @@ export const OnboardingScreen = ({ navigation }: any) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
+  mainContainer: {
     flex: 1,
     backgroundColor: Colors.background,
+  },
+  slideContainer: {
+    width: SCREEN_WIDTH,
     paddingHorizontal: Spacing.l,
-    paddingTop: Spacing.xxl,
-    paddingBottom: Spacing.l,
-    justifyContent: "space-between",
+    paddingTop: Spacing.xl + 10,
+    justifyContent: "flex-start",
   },
   header: {
-    marginBottom: Spacing.s,
+    marginBottom: Spacing.m,
   },
   brandTitle: {
     ...Typography.heading,
@@ -118,14 +175,14 @@ const styles = StyleSheet.create({
     height: 250,
     borderRadius: 24,
     overflow: "hidden",
+    backgroundColor: "#E5E7EB",
   },
   image: {
     width: "100%",
     height: "100%",
   },
   content: {
-    flex: 1,
-    justifyContent: "flex-end",
+    marginTop: Spacing.m,
   },
   stepBadge: {
     backgroundColor: Colors.light,
@@ -150,7 +207,10 @@ const styles = StyleSheet.create({
     ...Typography.body,
     color: Colors.secondaryDark,
     lineHeight: 22,
-    marginBottom: Spacing.m,
+  },
+  footer: {
+    paddingHorizontal: Spacing.l,
+    paddingBottom: Spacing.l,
   },
   dotsRow: {
     flexDirection: "row",
